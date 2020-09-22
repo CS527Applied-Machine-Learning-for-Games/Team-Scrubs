@@ -9,7 +9,7 @@ public class Paintable : MonoBehaviour
     public GameObject Brush;
     public RenderTexture RTexture;
     
-    public float BrushSize = 0.1f;
+    public float BrushSize = 0.05f;
     
     // Start is called before the first frame update
     void Start()
@@ -28,6 +28,10 @@ public class Paintable : MonoBehaviour
             {
                 var go = Instantiate(Brush, hit.point + Vector3.up * 0.1f, Quaternion.identity, transform);
                 go.transform.localScale = Vector3.one * BrushSize;
+                var go2 = Instantiate(Brush, hit.point + Vector3.up * 0.1f, Quaternion.identity, transform);
+                go2.transform.localScale = Vector3.one * BrushSize;
+                var go3 = Instantiate(Brush, hit.point + Vector3.up * 0.1f, Quaternion.identity, transform);
+                go3.transform.localScale = Vector3.one * BrushSize;
             }
         }
     }

@@ -895,7 +895,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Brush: {fileID: 935080654521507630, guid: fb7389c69d0834a47b5624a126959acc, type: 3}
   RTexture: {fileID: 8400000, guid: 39ff889dea4b44ac79be4b449d5e267b, type: 2}
-  BrushSize: 0.05
+  BrushSize: 0.01
 --- !u!64 &1798813941
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -929,7 +929,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 59262e3c6e275413c93c856b39970b09, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
