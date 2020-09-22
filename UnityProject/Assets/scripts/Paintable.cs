@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -10,6 +11,8 @@ public class Paintable : MonoBehaviour
     public RenderTexture RTexture;
     
     public float BrushSize = 0.05f;
+
+    private GameObject[] brushStrokes = new GameObject[100000];
     
     // Start is called before the first frame update
     void Start()
@@ -32,6 +35,10 @@ public class Paintable : MonoBehaviour
                 go2.transform.localScale = Vector3.one * BrushSize;
                 var go3 = Instantiate(Brush, hit.point + Vector3.up * 0.1f, Quaternion.identity, transform);
                 go3.transform.localScale = Vector3.one * BrushSize;
+
+                brushStrokes.Append(go);
+                brushStrokes.Append(go2);
+                brushStrokes.Append(go3);
             }
         }
     }
@@ -42,6 +49,21 @@ public class Paintable : MonoBehaviour
         
     }
 
+    public void undo()
+    {
+        StartCoroutine(coUndo());
+    }
+
+    private IEnumerator coUndo()
+    {
+        yield return new WaitForEndOfFrame();
+        Debug.Log("Deleting brush stokes");
+        for (int i = 0; i < brushStrokes.Length; i++)
+        {
+            Destroy(brushStrokes[i]);
+        }
+    }
+    
     private IEnumerator coSave()
     {
         yield return new WaitForEndOfFrame();
