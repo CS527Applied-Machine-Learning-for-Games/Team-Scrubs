@@ -58,3 +58,9 @@ png_img_data/
 
 
 .DS_Store
+
+
+################### Emanuel's Machine ####################################
+UnityProject/Assets/TextMesh\ Pro/*
+UnityProject/Assets/TextMesh\ Pro.meta
+PythonFiles/.python-version
