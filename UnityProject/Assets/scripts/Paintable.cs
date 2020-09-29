@@ -10,7 +10,8 @@ public class Paintable : MonoBehaviour
     public GameObject Brush;
     public RenderTexture RTexture;
     
-    public float BrushSize = 0.05f;
+    public float BrushSize = 0.07f;
+    public float upMultiplier = 0.05f;
 
     private GameObject[] brushStrokes = new GameObject[100000];
     
@@ -29,18 +30,19 @@ public class Paintable : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
             {
-                var go = Instantiate(Brush, hit.point + Vector3.up * 0.1f, Quaternion.identity, transform);
+                var go = Instantiate(Brush, hit.point + Vector3.up * upMultiplier, Quaternion.identity, transform);
                 go.transform.localScale = Vector3.one * BrushSize;
-                var go2 = Instantiate(Brush, hit.point + Vector3.up * 0.1f, Quaternion.identity, transform);
-                go2.transform.localScale = Vector3.one * BrushSize;
-                var go3 = Instantiate(Brush, hit.point + Vector3.up * 0.1f, Quaternion.identity, transform);
-                go3.transform.localScale = Vector3.one * BrushSize;
 
                 brushStrokes.Append(go);
-                brushStrokes.Append(go2);
-                brushStrokes.Append(go3);
+                
             }
         }
+    }
+
+    public void updateBrushSize(float newSize)
+    {
+        BrushSize = newSize;
+        Debug.Log("brush size: " + BrushSize);
     }
 
     public void save()
