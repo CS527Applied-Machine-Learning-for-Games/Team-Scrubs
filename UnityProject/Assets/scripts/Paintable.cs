@@ -8,7 +8,11 @@ using UnityEngine.XR;
 public class Paintable : MonoBehaviour
 {
     public GameObject Brush;
-    public RenderTexture RTexture;
+    public RenderTexture RTexture1;
+    
+    public Texture[] textures;
+    
+    public Material material;
     
     public float BrushSize = 0.07f;
     public float upMultiplier = 0.05f;
@@ -47,7 +51,7 @@ public class Paintable : MonoBehaviour
 
     public void save()
     {
-        StartCoroutine(coSave());
+        StartCoroutine(saveAndNext());
         
     }
 
@@ -59,24 +63,37 @@ public class Paintable : MonoBehaviour
     private IEnumerator coUndo()
     {
         yield return new WaitForEndOfFrame();
-        Debug.Log("Deleting brush stokes");
-        for (int i = 0; i < brushStrokes.Length; i++)
-        {
-            Destroy(brushStrokes[i]);
+        
+        // Deletes all brush strokes
+        for (int i = transform.childCount-1; i>=0; i--) {
+            GameObject.Destroy(transform.GetChild(i).gameObject);
         }
     }
     
-    private IEnumerator coSave()
+    private IEnumerator saveAndNext()
     {
         yield return new WaitForEndOfFrame();
         Debug.Log(Application.dataPath + "/createdImages/savedImage.png");
 
-        RenderTexture.active = RTexture;
+        RenderTexture.active = RTexture1;
 
-        var texture2D = new Texture2D(RTexture.width, RTexture.height);
-        texture2D.ReadPixels(new Rect(0, 0, RTexture.width, RTexture.height), 0, 0);
+        var texture2D = new Texture2D(RTexture1.width, RTexture1.height);
+        texture2D.ReadPixels(new Rect(0, 0, RTexture1.width, RTexture1.height), 0, 0);
 
         var imgData = texture2D.EncodeToPNG();
         File.WriteAllBytes(Application.dataPath + "/createdImages/savedImage.png", imgData);
+
+        // swap material texture
+        Renderer renderer = GetComponent<Renderer>();
+
+        var allTextures = Resources.LoadAll<Texture>("medical_images");
+        //Texture loadedTexture = Resources.Load<Texture>("medical_images/Stevens_pancreatic_INS_1E_25mM_769_5_pre_rec_294");
+
+        renderer.material.mainTexture = allTextures[0];
+        
+        // Remove all brush stroke child objects
+        foreach (Transform child in transform) {
+            GameObject.Destroy(child.gameObject);
+        }
     }
 }
