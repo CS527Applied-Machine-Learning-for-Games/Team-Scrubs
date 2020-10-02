@@ -10,19 +10,44 @@ public class Paintable : MonoBehaviour
     public GameObject Brush;
     public RenderTexture RTexture1;
     
-    public Texture[] textures;
-    
-    public Material material;
-    
     public float BrushSize = 0.07f;
     public float upMultiplier = 0.05f;
 
-    private GameObject[] brushStrokes = new GameObject[100000];
+    public int imgNumber = 1;
+    public string resourcePath = "data/images"; 
+    
+    private Texture[] allTextures;
     
     // Start is called before the first frame update
     void Start()
     {
+        /*
         
+        //string source = "/Users/emanuelazage/Documents/software_projects/Team-Scrubs/data/images/";
+        //string destination = "/Users/emanuelazage/Documents/software_projects/Team-Scrubs/UnityProject/Assets/Resources/data/images/";
+        string source = "/Users/emanuelazage/Documents/software_projects/Team-Scrubs/data/labels/";
+        string destination = "/Users/emanuelazage/Documents/software_projects/Team-Scrubs/UnityProject/Assets/Resources/data/labels/";
+        bool exists = Directory.Exists(source);
+        Debug.Log("source folder exists: " + exists);
+        if(exists){
+            Directory.CreateDirectory(destination);   
+            DirectoryInfo src = new FileInfo(source).Directory;
+            DirectoryInfo dest = new FileInfo(destination).Directory;
+            Debug.Log(src.FullName);
+            foreach (var file in src.GetFiles()){
+                file.CopyTo(Path.Combine(dest.FullName, file.Name), true);
+                Debug.Log(file.Name);
+            }
+        }
+        
+         */
+        
+        allTextures = Resources.LoadAll<Texture>(resourcePath);
+        
+        Renderer renderer = GetComponent<Renderer>();
+
+        renderer.material.mainTexture = allTextures[imgNumber-1];
+        imgNumber += 1;
     }
 
     // Update is called once per frame
@@ -36,8 +61,6 @@ public class Paintable : MonoBehaviour
             {
                 var go = Instantiate(Brush, hit.point + Vector3.up * upMultiplier, Quaternion.identity, transform);
                 go.transform.localScale = Vector3.one * BrushSize;
-
-                brushStrokes.Append(go);
                 
             }
         }
@@ -73,6 +96,18 @@ public class Paintable : MonoBehaviour
     private IEnumerator saveAndNext()
     {
         yield return new WaitForEndOfFrame();
+    
+        // Save Image
+        
+        saveImg();
+        
+        // Go To Next Image
+        next();
+        
+    }
+
+    private void saveImg()
+    {
         Debug.Log(Application.dataPath + "/createdImages/savedImage.png");
 
         RenderTexture.active = RTexture1;
@@ -83,13 +118,15 @@ public class Paintable : MonoBehaviour
         var imgData = texture2D.EncodeToPNG();
         File.WriteAllBytes(Application.dataPath + "/createdImages/savedImage.png", imgData);
 
+    }
+
+    public void next()
+    {
         // swap material texture
         Renderer renderer = GetComponent<Renderer>();
 
-        var allTextures = Resources.LoadAll<Texture>("medical_images");
-        //Texture loadedTexture = Resources.Load<Texture>("medical_images/Stevens_pancreatic_INS_1E_25mM_769_5_pre_rec_294");
-
-        renderer.material.mainTexture = allTextures[0];
+        renderer.material.mainTexture = allTextures[imgNumber-1];
+        imgNumber += 1;
         
         // Remove all brush stroke child objects
         foreach (Transform child in transform) {
