@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -9,15 +10,15 @@ public class Paintable : MonoBehaviour
 {
     public GameObject Brush;
     public RenderTexture RTexture1;
-    
+
     public float BrushSize = 0.07f;
     public float upMultiplier = 0.05f;
 
     public int imgNumber = 1;
-    public string resourcePath = "data/images"; 
-    
+    public string resourcePath = "data/images";
+
     private Texture[] allTextures;
-    
+
     // Start is called before the first frame update
     void Start()
     {
@@ -41,13 +42,13 @@ public class Paintable : MonoBehaviour
         }
         
          */
-        
+
         allTextures = Resources.LoadAll<Texture>(resourcePath);
         
+        Debug.Log("length1:" + allTextures.Length);
         Renderer renderer = GetComponent<Renderer>();
 
-        renderer.material.mainTexture = allTextures[imgNumber-1];
-        imgNumber += 1;
+        renderer.material.mainTexture = allTextures[imgNumber - 1];
     }
 
     // Update is called once per frame
@@ -61,7 +62,7 @@ public class Paintable : MonoBehaviour
             {
                 var go = Instantiate(Brush, hit.point + Vector3.up * upMultiplier, Quaternion.identity, transform);
                 go.transform.localScale = Vector3.one * BrushSize;
-                
+
             }
         }
     }
@@ -75,7 +76,7 @@ public class Paintable : MonoBehaviour
     public void save()
     {
         StartCoroutine(saveAndNext());
-        
+
     }
 
     public void undo()
@@ -86,29 +87,38 @@ public class Paintable : MonoBehaviour
     private IEnumerator coUndo()
     {
         yield return new WaitForEndOfFrame();
-        
+
         // Deletes all brush strokes
-        for (int i = transform.childCount-1; i>=0; i--) {
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
             GameObject.Destroy(transform.GetChild(i).gameObject);
         }
     }
-    
+
     private IEnumerator saveAndNext()
     {
         yield return new WaitForEndOfFrame();
-    
+
         // Save Image
-        
+
         saveImg();
-        
+
+        if (imgNumber % 10 == 0)
+        {
+            Debug.Log("check num: "+ imgNumber);
+            newBatch();
+        }
+
+        imgNumber += 1;
+
         // Go To Next Image
         next();
-        
+
     }
 
     private void saveImg()
     {
-        Debug.Log(Application.dataPath + "/createdImages/savedImage.png");
+        //Debug.Log(Application.dataPath + "/createdImages/savedImage.png");
 
         RenderTexture.active = RTexture1;
 
@@ -116,20 +126,34 @@ public class Paintable : MonoBehaviour
         texture2D.ReadPixels(new Rect(0, 0, RTexture1.width, RTexture1.height), 0, 0);
 
         var imgData = texture2D.EncodeToPNG();
-        File.WriteAllBytes(Application.dataPath + "/createdImages/savedImage.png", imgData);
+        File.WriteAllBytes(Application.dataPath + "/createdImages/savedImage" + imgNumber + ".png", imgData);
 
+    }
+
+    public void newBatch()
+    {
+        //Go to cutscene
+        Debug.Log("go to cut scene");
+
+        //send the saved images to python and msg
+        /*
+        foreach (File in Folder)
+        {
+            file.CopyTo();
+        }
+        */
     }
 
     public void next()
     {
         // swap material texture
         Renderer renderer = GetComponent<Renderer>();
+        //Debug.Log("length:"+allTextures.Length);
+        renderer.material.mainTexture = allTextures[imgNumber - 1];
 
-        renderer.material.mainTexture = allTextures[imgNumber-1];
-        imgNumber += 1;
-        
         // Remove all brush stroke child objects
-        foreach (Transform child in transform) {
+        foreach (Transform child in transform)
+        {
             GameObject.Destroy(child.gameObject);
         }
     }
