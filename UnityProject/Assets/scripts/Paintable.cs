@@ -1,4 +1,6 @@
-using System.Collections;
+
+﻿using System;
+ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,6 +20,9 @@ public class Paintable : MonoBehaviour
     public string resourcePath = "data/images";
 
     private Texture[] allTextures;
+    
+    private Renderer renderer;
+    
 
     // Start is called before the first frame update
     void Start()
@@ -45,7 +50,14 @@ public class Paintable : MonoBehaviour
 
         allTextures = Resources.LoadAll<Texture>(resourcePath);
         
-        Renderer renderer = GetComponent<Renderer>();
+        Array.Sort<Texture>(allTextures,
+            delegate(Texture x, Texture y) { return String.Compare(x.name,y.name, StringComparison.Ordinal); });
+        
+        Debug.Log(allTextures[0].name);
+        Debug.Log(allTextures[1].name);
+        Debug.Log(allTextures[2].name);
+        
+        renderer = GetComponent<Renderer>();
 
         renderer.material.mainTexture = allTextures[imgNumber - 1];
     }
@@ -116,15 +128,17 @@ public class Paintable : MonoBehaviour
 
     private void saveImg()
     {
-        //Debug.Log(Application.dataPath + "/createdImages/savedImage.png");
 
+        //Debug.Log(Application.dataPath + "/createdImages/savedImage.png");
+        
         RenderTexture.active = RTexture1;
 
         var texture2D = new Texture2D(RTexture1.width, RTexture1.height);
         texture2D.ReadPixels(new Rect(0, 0, RTexture1.width, RTexture1.height), 0, 0);
 
         var imgData = texture2D.EncodeToPNG();
-        File.WriteAllBytes(Application.dataPath + "/Resources/data/drawings/savedImage" + imgNumber + ".png", imgData);
+
+        File.WriteAllBytes(Application.dataPath + "/Resources/data/drawings/" + imgNumber + ".png", imgData);
 
     }
 
@@ -136,15 +150,33 @@ public class Paintable : MonoBehaviour
 
     public void next()
     {
+
+        Debug.Log("number brush strokes: " + transform.childCount);
+        
+        if (transform.childCount < 1)
+        {
+            Debug.Log("less than 1 child, can't go to next image until you shade in the cell");
+            return;
+        }
+        
         // swap material texture
+
         Renderer renderer = GetComponent<Renderer>();
         //Debug.Log("length:"+allTextures.Length);
         renderer.material.mainTexture = allTextures[imgNumber - 1];
+
 
         // Remove all brush stroke child objects
         foreach (Transform child in transform)
         {
             GameObject.Destroy(child.gameObject);
         }
+
     }
+    
+    private void sortTextures(Texture[] textures)
+    {
+        
+    }
+
 }
