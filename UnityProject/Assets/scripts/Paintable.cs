@@ -24,9 +24,11 @@ public class Paintable : MonoBehaviour
     
     private Renderer _renderer;
 
+    // automatic score update feature 
     private int _isRunning = 1;
-    private int _secFreqRefresh = 1;
+    private int _secFreqRefresh = 3; // how often we update the ui - i.e. calculate score in seconds
 
+    // undo button feature
     private int _undoDeleteRatio = 10;
     private int _undoSize;
     
@@ -90,7 +92,8 @@ public class Paintable : MonoBehaviour
         var viewableTexture = new Texture2D(RTextureViewable.width, RTextureViewable.height);
         viewableTexture.ReadPixels(new Rect(0, 0, RTextureViewable.width, RTextureViewable.height), 0, 0);
 
-        float similarityScore = evaluateAccuracy(createMaskTexture(), viewableTexture);
+        float similarityScore = overlapScore(createMaskTexture(), viewableTexture);
+        //float similarityScore = evaluateAccuracy(createMaskTexture(), viewableTexture);
         
         Debug.Log("score: " + similarityScore.ToString());
 
@@ -191,21 +194,35 @@ public class Paintable : MonoBehaviour
             return -1;
         }
 
-        for (int i = 0; i < drawnPixels.Length; i++)
+        for (int i = 0; i < labelPixels.Length; i++)
         {
-            if (drawnPixels[i].a == 0)
+            // TODO: Will want to convert label texture into a transparent mask and use this comparision instead of checking for dark pixels
+            //if (labelPixels[i].a == 0)
+            if (labelPixels[i].r > 0.5)
             {
                 maxOverlap += 1;
-
-                if (labelPixels[i].a == 0)
-                {
-                    overLapCount += 1;
-                }
             }
         }
 
-        return overLapCount / maxOverlap * 100; // dividing by zero
+        for (int i = 0; i < drawnPixels.Length; i++)
+        {
+            // TODO: Will want to convert label texture into a transparent mask and use this comparision instead of checking for dark pixels
+            //if (drawnPixels[i].a == 0 && labelPixels[i].a == 0) overLapCount += 1; // plus 1 for each pixen drawn that is in label mask
+            //if (drawnPixels[i].a == 0 && labelPixels[i].a != 0) overLapCount -= 1; // minus 1 for each pixel drawn that is outside of label mask
+            
+            if (drawnPixels[i].a == 0 && labelPixels[i].r > 0.5) overLapCount += 1; // plus 1 for each pixen drawn that is in label mask
+            if (drawnPixels[i].a == 0 && labelPixels[i].r < 0.5) overLapCount -= 1; // minus 1 for each pixel drawn that is outside of label mask
+        }
+
+        Debug.Log(overLapCount);
+        Debug.Log(maxOverlap);
         
+        if (maxOverlap == 0) return 0;
+        
+        float score = ((float)overLapCount / (float)maxOverlap) * 100f;
+        
+        return score;
+
     }
     
     private float evaluateAccuracy(Texture2D userInput, Texture2D groundTruth)
