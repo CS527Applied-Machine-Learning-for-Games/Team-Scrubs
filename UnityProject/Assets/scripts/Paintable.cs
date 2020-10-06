@@ -3,18 +3,21 @@ using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Paintable : MonoBehaviour
 {
     public GameObject Brush;
+    public Slider sizeSlider;
     public RenderTexture RTexture1;
-    public Viewable viewable; 
-    
-    public float BrushSize = 0.07f;
-    public float upMultiplier = 0.00f;
-
+    public RenderTexture RTextureViewable;
+    public Viewable viewable;
     public int imgNumber = 1;
-    public string resourcePath;
+    public string paintableResourcePath;
+    public string viewableResourcePath;
+    
+    private float _brushSize = 0.25f;
+    private float _upMultiplier = 0f;
 
     private Texture2D[] allTextures;
     private Texture2D[] labelTextures;
@@ -23,33 +26,15 @@ public class Paintable : MonoBehaviour
 
     private int _isRunning = 1;
     private int _secFreqRefresh = 1;
-    
 
+    private int _undoDeleteRatio = 10;
+    private int _undoSize;
+    
+    
     // Start is called before the first frame update
     void Start()
     {
-        /*
-        
-        //string source = "/Users/emanuelazage/Documents/software_projects/Team-Scrubs/data/images/";
-        //string destination = "/Users/emanuelazage/Documents/software_projects/Team-Scrubs/UnityProject/Assets/Resources/data/images/";
-        string source = "/Users/emanuelazage/Documents/software_projects/Team-Scrubs/data/labels/";
-        string destination = "/Users/emanuelazage/Documents/software_projects/Team-Scrubs/UnityProject/Assets/Resources/data/labels/";
-        bool exists = Directory.Exists(source);
-        Debug.Log("source folder exists: " + exists);
-        if(exists){
-            Directory.CreateDirectory(destination);   
-            DirectoryInfo src = new FileInfo(source).Directory;
-            DirectoryInfo dest = new FileInfo(destination).Directory;
-            Debug.Log(src.FullName);
-            foreach (var file in src.GetFiles()){
-                file.CopyTo(Path.Combine(dest.FullName, file.Name), true);
-                Debug.Log(file.Name);
-            }
-        }
-        
-         */
-
-        allTextures = Resources.LoadAll<Texture2D>(resourcePath);
+        allTextures = Resources.LoadAll<Texture2D>(paintableResourcePath);
         
         Array.Sort(allTextures, delegate(Texture2D x, Texture2D y) {
             return Int16.Parse(x.name).CompareTo(Int16.Parse(y.name));
@@ -58,55 +43,63 @@ public class Paintable : MonoBehaviour
         _renderer = GetComponent<Renderer>();
 
         _renderer.material.mainTexture = allTextures[imgNumber - 1];
-        
-        
-        labelTextures = Resources.LoadAll<Texture2D>("data/label");
+
+        labelTextures = Resources.LoadAll<Texture2D>(viewableResourcePath);
         
         Array.Sort(labelTextures, delegate(Texture2D x, Texture2D y) {
             return Int16.Parse(x.name).CompareTo(Int16.Parse(y.name));
         });
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButton(0))
+        
+        if (Input.GetMouseButton(0) && Input.mousePosition.y < 730 ) // putting down brush stokes
         {
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
             {
-                var go = Instantiate(Brush, hit.point + Vector3.up * upMultiplier, Quaternion.identity, transform);
-                go.transform.localScale = Vector3.one * BrushSize;
+                var go = Instantiate(Brush, hit.point + Vector3.up * _upMultiplier, Quaternion.identity, transform);
+                go.transform.localScale = Vector3.one * _brushSize;
             }
+
+            _undoSize = transform.childCount/_undoDeleteRatio;
         }
 
-        if (_isRunning == 1)
-        {
-            StartCoroutine(updateUI());
-        }
+        if (_isRunning == 1) StartCoroutine(coUpdateUI());
+
+        if (Input.GetKeyDown(KeyCode.UpArrow) && _brushSize < 1.0f) updateBrushSize(_brushSize + 0.1f); 
+        if (Input.GetKeyDown(KeyCode.DownArrow) && _brushSize > 0.1f) updateBrushSize(_brushSize - 0.1f);
+        
     }
 
-    public IEnumerator updateUI()
+    public IEnumerator coUpdateUI()
     {
         _isRunning = 0;
         yield return new WaitForSeconds(_secFreqRefresh);
-        updateUIItems();
-        _isRunning = 0;
+        updateUI();
+        _isRunning = 1;
     }
 
-    private void updateUIItems()
+    private void updateUI()
     {
-        float similarityScore = evaluateAccuracy((Texture2D) _renderer.material.mainTexture, labelTextures[imgNumber-1]);
+        RenderTexture.active = RTextureViewable;
+        var viewableTexture = new Texture2D(RTextureViewable.width, RTextureViewable.height);
+        viewableTexture.ReadPixels(new Rect(0, 0, RTextureViewable.width, RTextureViewable.height), 0, 0);
+
+        float similarityScore = evaluateAccuracy(createMaskTexture(), viewableTexture);
         
-        Debug.Log(similarityScore);
+        Debug.Log("score: " + similarityScore.ToString());
 
     }
 
     public void updateBrushSize(float newSize)
     {
-        BrushSize = newSize;
+        _brushSize = newSize;
+        sizeSlider.value = _brushSize;
     }
 
     public void goToNextImage()
@@ -130,8 +123,8 @@ public class Paintable : MonoBehaviour
     {
         yield return new WaitForEndOfFrame();
 
-        // Deletes all brush strokes
-        for (int i = transform.childCount - 1; i >= 0; i--)
+        // Deletes some ratio (_undoDeleteRatio) of highest number of brushstrokes before lifting paint brush
+        for (int i = transform.childCount - 1; i >= Math.Max(transform.childCount-_undoSize, 0); i--)
         {
             GameObject.Destroy(transform.GetChild(i).gameObject);
         }
@@ -159,45 +152,9 @@ public class Paintable : MonoBehaviour
 
     private void saveImg()
     {
-        
-        RenderTexture.active = RTexture1;
-
-        var texture2D = new Texture2D(RTexture1.width, RTexture1.height);
-        texture2D.ReadPixels(new Rect(0, 0, RTexture1.width, RTexture1.height), 0, 0);
-
-        //var imgData = texture2D.EncodeToPNG();
-
-        //File.WriteAllBytes(Application.dataPath + "/Resources/data/drawings/" + imgNumber + ".png", imgData);
-
-        var drawingPixels = texture2D.GetPixels();
-        var maskOutputPixels = drawingPixels;
-
-        for (int i = 0; i < drawingPixels.Length; i++)
-        {
-            if (drawingPixels[i].r >= 0.95 && drawingPixels[i].g < 0.6 && drawingPixels[i].b < 0.6) // is red
-            {
-                maskOutputPixels[i].a = 0;
-            }
-            else
-            {
-                maskOutputPixels[i].a = 1;
-                maskOutputPixels[i].r = 0;
-                maskOutputPixels[i].g = 0;
-                maskOutputPixels[i].b = 0;
-            }
-        }
-
-        var maskTexture = texture2D;
-        maskTexture.SetPixels(maskOutputPixels);
-        var pngData = texture2D.EncodeToPNG();
+        var maskTexture = createMaskTexture();
+        var pngData = maskTexture.EncodeToPNG();
         File.WriteAllBytes(Application.dataPath + "/Resources/data/drawings/" + imgNumber + ".png", pngData);
-        
-
-        //Debug.Log(pxls[0]);Debug.Log(pxls[1]);Debug.Log(pxls[2]);Debug.Log(pxls[3]);
-        //Debug.Log(pxls[256]);Debug.Log(pxls[257]);Debug.Log(pxls[258]);Debug.Log(pxls[259]);
-        //Debug.Log(pxls[512]);Debug.Log(pxls[513]);Debug.Log(pxls[514]);Debug.Log(pxls[515]);
-        //Debug.Log(pxls[768]);Debug.Log(pxls[769]);Debug.Log(pxls[770]);Debug.Log(pxls[771]);
-        //Debug.Log(pxls[32382]);
     }
 
     public void newBatch()
@@ -219,11 +176,42 @@ public class Paintable : MonoBehaviour
         }
 
     }
+
+    private float overlapScore(Texture2D drawnTexture, Texture2D labelTexture)
+    {
+        int maxOverlap = 0; // number of alpha = 0 pixels in gt
+        int overLapCount = 0; // number of times same pixel in drawn img and in gt had alpha = 0
+
+        Color[] drawnPixels = drawnTexture.GetPixels();
+        Color[] labelPixels = labelTexture.GetPixels();
+
+        if (drawnPixels.Length != labelPixels.Length)
+        {
+            Debug.Log("overlap score input lengths do not match!!");
+            return -1;
+        }
+
+        for (int i = 0; i < drawnPixels.Length; i++)
+        {
+            if (drawnPixels[i].a == 0)
+            {
+                maxOverlap += 1;
+
+                if (labelPixels[i].a == 0)
+                {
+                    overLapCount += 1;
+                }
+            }
+        }
+
+        return overLapCount / maxOverlap * 100; // dividing by zero
+        
+    }
     
     private float evaluateAccuracy(Texture2D userInput, Texture2D groundTruth)
     {
-        //Based on DICE metric on the assumption that texture pixels have alpha values of {0: background, 1: label} where alpha is "a" in Color(r,b,g,a)
 
+        //Based on DICE metric on the assumption that texture pixels have alpha values of {0: background, 1: label} where alpha is "a" in Color(r,b,g,a)
         Color[] userPixels = userInput.GetPixels();
         Color[] gtPixels = groundTruth.GetPixels();
 
@@ -239,6 +227,37 @@ public class Paintable : MonoBehaviour
         }
 
         return (overlapArea * 2) / (userArea + gtArea);
+    }
+
+    private Texture2D createMaskTexture()
+    {
+        RenderTexture.active = RTexture1;
+
+        var drawingTexture = new Texture2D(RTexture1.width, RTexture1.height);
+        drawingTexture.ReadPixels(new Rect(0, 0, RTexture1.width, RTexture1.height), 0, 0);
+        
+        var drawingPixels = drawingTexture.GetPixels();
+        var maskOutputPixels = drawingPixels;
+
+        for (int i = 0; i < drawingPixels.Length; i++)
+        {
+            if (drawingPixels[i].r >= 0.95 && drawingPixels[i].g < 0.6 && drawingPixels[i].b < 0.6) // is red
+            {
+                maskOutputPixels[i].a = 0;
+            }
+            else
+            {
+                maskOutputPixels[i].a = 1;
+                maskOutputPixels[i].r = 0;
+                maskOutputPixels[i].g = 0;
+                maskOutputPixels[i].b = 0;
+            }
+        }
+
+        Texture2D maskTexture = new Texture2D(drawingTexture.width, drawingTexture.height);
+        maskTexture.SetPixels(maskOutputPixels);
+
+        return maskTexture;
     }
 
 }
