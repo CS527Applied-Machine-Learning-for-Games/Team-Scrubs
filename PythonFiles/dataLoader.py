@@ -15,7 +15,6 @@ def get_data(img_root, label_root, start_index, end_index):
     X = []
     Y = []
     for i in range(start_index, end_index+1):
-        print(i)
         img_dir = os.path.join(img_root, str(i) + ".png")
         label_dir = os.path.join(label_root, str(i) + ".png")
         img = np.asarray(PIL.Image.open(img_dir).resize((256,256), PIL.Image.ANTIALIAS))
