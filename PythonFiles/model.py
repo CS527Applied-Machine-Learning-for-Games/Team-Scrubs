@@ -5,8 +5,6 @@ from keras.layers import *
 from keras.optimizers import *
 from keras import backend as keras
 
-image_root_dir = "./Team-Scrubs/data/"
-
 
 def unet(pretrained_weights = None,input_size = (256,256,1)):
     inputs = Input(input_size)

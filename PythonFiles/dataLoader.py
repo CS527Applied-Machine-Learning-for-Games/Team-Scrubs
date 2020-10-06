@@ -1,7 +1,7 @@
 import os, PIL
 import numpy as np
 
-image_root_dir = "../data/"
+image_root_dir = "../UnityProject/Assets/Resources/data/"
 
 train_imgs_sub_dir = os.path.join(image_root_dir, "pretrain_imgs")
 train_labels_sub_dir = os.path.join(image_root_dir, "pretrain_labels")
@@ -18,8 +18,8 @@ def get_data(img_root, label_root, start_index, end_index):
         print(i)
         img_dir = os.path.join(img_root, str(i) + ".png")
         label_dir = os.path.join(label_root, str(i) + ".png")
-        img = np.asarray(PIL.Image.open(img_dir))
-        mask = np.asarray(PIL.Image.open(label_dir))
+        img = np.asarray(PIL.Image.open(img_dir).resize((256,256), PIL.Image.ANTIALIAS))
+        mask = np.asarray(PIL.Image.open(label_dir).resize((256,256), PIL.Image.ANTIALIAS))
         img = img / 255
         mask = mask / 255
         mask[mask > 0.5] = 1

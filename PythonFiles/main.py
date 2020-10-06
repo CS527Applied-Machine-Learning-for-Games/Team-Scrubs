@@ -11,24 +11,26 @@ from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 
 
 def save_prediction(imgs, start_index=1, end_index=801):
-    for i in range(start_index, end_index):
-        pass
-
-
+    for i, img in zip(range(start_index, end_index), imgs):
+        image_dir = "../UnityProject/Assets/Resources/data/prediction/" + str(i) + ".png"
+        img[img > 0.5] = 1
+        img[img <= 0.5] = 0
+        img = img * 255
+        PIL.Image.fromarray(img.astype(np.uint8)).save(image_dir)
 
 
 def pre_train():
     m = unet()
     print("Retrieving pre-train data...")
     X, Y = pretrain_data()
-    H = m.fit(X, Y, batch_size=10, epochs=3, validation_split=0.2, verbose=2)
+    H = m.fit(X, Y, batch_size=10, epochs=1, validation_split=0.2)
     print("Saving model...")
-    m.save("../data/models/1.h5")
+    m.save("./models/1.h5")
     print("Model saved to data/models/1.h5")
     print("Evaluating pre-trained model...")
     results = m.evaluate(test_X, test_Y, batch_size=10)
     print("test loss, test acc:", results)
-    with open("../data/reports/1.txt") as f:
+    with open("../UnityProject/Assets/Resources/data/reports/1.txt") as f:
         f.write(results[1])
     print("Resut saved to data/reports/1.txt")
     print("Load game images...")
@@ -42,7 +44,7 @@ def pre_train():
 def train_model_by_batch():
     BATCH_NUM = 0
     # Check if pre-trained model exist
-    path_to_watch = "../data/drawing/"
+    path_to_watch = "../UnityProject/Assets/Resources/data/drawing/"
     before = dict ([(f, None) for f in os.listdir(path_to_watch)])
     while True:
         time.sleep (10)
@@ -54,16 +56,16 @@ def train_model_by_batch():
         if len(before) >= BATCH_NUM * 10 + 10:
             # Train model for 1 batch
             X, Y = play_data_by_batch(BATCH_NUM)
-            m = load_model('../data/models/{}.h5'.format(BATCH_NUM+1))
-            m.fit(X, Y, step=1)
+            m = load_model('./models/{}.h5'.format(BATCH_NUM+1))
+            m.fit(X, Y, batch_size=10, epochs=1)
             BATCH_NUM += 1
-            m.save('../data/models/{}.h5'.format(BATCH_NUM+1))
-            print("Model saved to data/models/{}.h5".format(BATCH_NUM+1))
+            m.save('./models/{}.h5'.format(BATCH_NUM+1))
+            print("Model saved to models/{}.h5".format(BATCH_NUM+1))
             ## How to evaluate?     **Could add metric to model.py or design our own
             print("Evaluating new model...")
             results = m.evaluate(test_X, test_Y, batch_size=10)
             print("test loss, test acc:", results)
-            with open("../data/reports/{}.txt".format(BATCH_NUM+1)) as f:
+            with open("../UnityProject/Assets/Resources/data/reports/{}.txt".format(BATCH_NUM+1)) as f:
                 f.write(results[1])
             print("Resut saved to data/reports/{}.txt".format(BATCH_NUM+1))
 
@@ -73,12 +75,12 @@ def train_model_by_batch():
 
                 
 if __name__ == '__main__':
-    if not os.path.exists("../data/models/"):
+    if not os.path.exists("./models/"):
         print("Creating model directory...")
-        os.makedirs("../data/models/")
+        os.makedirs("./models/")
     print("Preparing testing data...")
     test_X, test_Y = test_data()
-    if not os.path.exists("../data/models/1.h5"):
+    if not os.path.exists("./models/1.h5"):
         print("Pre-training the model...")
         pre_train()
     train_model_by_batch()
