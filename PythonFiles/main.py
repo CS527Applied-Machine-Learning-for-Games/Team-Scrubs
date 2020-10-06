@@ -1,0 +1,89 @@
+import os, sys, time
+from model import unet
+from dataLoader import pretrain_data, test_data, play_data, play_data_by_batch
+
+from keras.models import *
+from keras.layers import *
+from keras.optimizers import *
+from keras import backend as keras
+from keras.preprocessing.image import ImageDataGenerator
+from keras.callbacks import ModelCheckpoint, LearningRateScheduler
+
+
+def save_prediction(imgs, start_index=1, end_index=801):
+    for i in range(start_index, end_index):
+        pass
+
+
+
+
+def pre_train():
+    m = unet()
+    print("Retrieving pre-train data...")
+    X, Y = pretrain_data()
+    H = m.fit(X, Y, batch_size=10, epochs=3, validation_split=0.2, verbose=2)
+    print("Saving model...")
+    m.save("../data/models/1.h5")
+    print("Model saved to data/models/1.h5")
+    print("Evaluating pre-trained model...")
+    results = m.evaluate(test_X, test_Y, batch_size=10)
+    print("test loss, test acc:", results)
+    with open("../data/reports/1.txt") as f:
+        f.write(results[1])
+    print("Resut saved to data/reports/1.txt")
+    print("Load game images...")
+    X, _ = play_data()
+    print("Predicting game images...")
+    pred_Y = m.predict(X)
+    print("Saving predictions...")
+    save_prediction(pred_Y)
+
+
+def train_model_by_batch():
+    BATCH_NUM = 0
+    # Check if pre-trained model exist
+    path_to_watch = "../data/drawing/"
+    before = dict ([(f, None) for f in os.listdir(path_to_watch)])
+    while True:
+        time.sleep (10)
+        after = dict([(f, None) for f in os.listdir(path_to_watch)])
+        added = [f for f in after if not f in before]
+        if added:
+            print "Added drawings: ", ", ".join (added)
+        before = after
+        if len(before) >= BATCH_NUM * 10 + 10:
+            # Train model for 1 batch
+            X, Y = play_data_by_batch(BATCH_NUM)
+            m = load_model('../data/models/{}.h5'.format(BATCH_NUM+1))
+            m.fit(X, Y, step=1)
+            BATCH_NUM += 1
+            m.save('../data/models/{}.h5'.format(BATCH_NUM+1))
+            print("Model saved to data/models/{}.h5".format(BATCH_NUM+1))
+            ## How to evaluate?     **Could add metric to model.py or design our own
+            print("Evaluating new model...")
+            results = m.evaluate(test_X, test_Y, batch_size=10)
+            print("test loss, test acc:", results)
+            with open("../data/reports/{}.txt".format(BATCH_NUM+1)) as f:
+                f.write(results[1])
+            print("Resut saved to data/reports/{}.txt".format(BATCH_NUM+1))
+
+            next_X, _ = play_data_by_batch(BATCH_NUM)
+            pred_Y = m.predict(next_X)
+            save_prediction(pred_Y, BATCH_NUM*10+1, BATCH_NUM*10+11)
+
+                
+if __name__ == '__main__':
+    if not os.path.exists("../data/models/"):
+        print("Creating model directory...")
+        os.makedirs("../data/models/")
+    print("Preparing testing data...")
+    test_X, test_Y = test_data()
+    if not os.path.exists("../data/models/1.h5"):
+        print("Pre-training the model...")
+        pre_train()
+    train_model_by_batch()
+        
+
+
+
+        
