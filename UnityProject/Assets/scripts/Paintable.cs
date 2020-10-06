@@ -269,9 +269,9 @@ public class Paintable : MonoBehaviour
             else
             {
                 maskOutputPixels[i].a = 0;
-                maskOutputPixels[i].r = 256;
-                maskOutputPixels[i].g = 256;
-                maskOutputPixels[i].b = 256;
+                maskOutputPixels[i].r = 255;
+                maskOutputPixels[i].g = 255;
+                maskOutputPixels[i].b = 255;
             }
         }
 
