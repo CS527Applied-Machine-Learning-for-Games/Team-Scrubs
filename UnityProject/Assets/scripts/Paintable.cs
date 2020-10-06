@@ -45,7 +45,6 @@ public class Paintable : MonoBehaviour
 
         allTextures = Resources.LoadAll<Texture>(resourcePath);
         
-        Debug.Log("length1:" + allTextures.Length);
         Renderer renderer = GetComponent<Renderer>();
 
         renderer.material.mainTexture = allTextures[imgNumber - 1];
@@ -105,7 +104,6 @@ public class Paintable : MonoBehaviour
 
         if (imgNumber % 10 == 0)
         {
-            Debug.Log("check num: "+ imgNumber);
             newBatch();
         }
 
@@ -126,7 +124,7 @@ public class Paintable : MonoBehaviour
         texture2D.ReadPixels(new Rect(0, 0, RTexture1.width, RTexture1.height), 0, 0);
 
         var imgData = texture2D.EncodeToPNG();
-        File.WriteAllBytes(Application.dataPath + "/createdImages/savedImage" + imgNumber + ".png", imgData);
+        File.WriteAllBytes(Application.dataPath + "/Resources/data/drawings/savedImage" + imgNumber + ".png", imgData);
 
     }
 
@@ -134,14 +132,6 @@ public class Paintable : MonoBehaviour
     {
         //Go to cutscene
         Debug.Log("go to cut scene");
-
-        //send the saved images to python and msg
-        /*
-        foreach (File in Folder)
-        {
-            file.CopyTo();
-        }
-        */
     }
 
     public void next()
