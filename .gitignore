@@ -48,6 +48,7 @@ sysinfo.txt
 ################################## Python ######################################
 
 *.pyc
+.ipynb_checkpoints
 
 ################################## Data ########################################
 
@@ -55,8 +56,8 @@ PythonFiles/ML\ code/data/Image_3D/Stevens_PBC_INS1e_25mMglu+Ex-4_5min_1083_16-1
 PythonFiles/ML\ code/data/Image_2D/*
 PythonFiles/ML\ code/scripts/models/
 png_img_data/
-
-
+PythonFiles/models/*
+UnityProject/Assets/Resources/data/reports/*
 .DS_Store
 
 
