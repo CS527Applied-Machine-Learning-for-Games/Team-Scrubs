@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.IO;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,7 +12,9 @@ public class Paintable : MonoBehaviour
     public Slider sizeSlider;
     public RenderTexture RTexture1;
     public RenderTexture RTextureViewable;
+    public TMP_Text scoreText;
     public Viewable viewable;
+    
     public int imgNumber = 1;
     public string paintableResourcePath;
     public string viewableResourcePath;
@@ -96,6 +99,7 @@ public class Paintable : MonoBehaviour
         //float similarityScore = evaluateAccuracy(createMaskTexture(), viewableTexture);
         
         Debug.Log("score: " + similarityScore.ToString());
+        scoreText.text = "Score: " + similarityScore.ToString();
 
     }
 
@@ -214,13 +218,10 @@ public class Paintable : MonoBehaviour
             if (drawnPixels[i].a == 0 && labelPixels[i].r < 0.5) overLapCount -= 1; // minus 1 for each pixel drawn that is outside of label mask
         }
 
-        Debug.Log(overLapCount);
-        Debug.Log(maxOverlap);
-        
         if (maxOverlap == 0) return 0;
         
         float score = ((float)overLapCount / (float)maxOverlap) * 100f;
-        
+        if (score < 0) score = 0;
         return score;
 
     }
