@@ -5,6 +5,7 @@ using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class Paintable : MonoBehaviour
 {
@@ -15,7 +16,7 @@ public class Paintable : MonoBehaviour
     public TMP_Text scoreText;
     public Viewable viewable;
     
-    public int imgNumber = 1;
+    public int imgNumber;
     public string paintableResourcePath;
     public string viewableResourcePath;
     
@@ -39,6 +40,12 @@ public class Paintable : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //***Must run this line below when truly first time run the game***
+        //PlayerPrefs.DeleteAll();
+
+
+        imgNumber = PlayerPrefs.GetInt("imgNum", 1);
+
         allTextures = Resources.LoadAll<Texture2D>(paintableResourcePath);
         
         Array.Sort(allTextures, delegate(Texture2D x, Texture2D y) {
@@ -147,9 +154,10 @@ public class Paintable : MonoBehaviour
 
         if (imgNumber % 10 == 0)
         {
+            PlayerPrefs.SetInt("imgNum", imgNumber+1);
             newBatch();
         }
-
+        Debug.Log("current imgNumber: " + imgNumber);
         imgNumber += 1;
 
         // Go To Next Image
@@ -168,6 +176,8 @@ public class Paintable : MonoBehaviour
     {
         //Go to cutscene
         Debug.Log("go to cut scene");
+        //DontDestroyOnLoad(imgNumber);
+        SceneManager.LoadScene("Cutscene");
     }
 
     public void next()

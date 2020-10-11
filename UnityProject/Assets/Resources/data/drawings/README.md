@@ -1,1 +1,0 @@
-This README file is used to set up this empty directory called drawing.
