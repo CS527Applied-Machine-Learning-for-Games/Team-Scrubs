@@ -30,7 +30,7 @@ public class Paintable : MonoBehaviour
 
     // automatic score update feature 
     private int _isRunning = 1;
-    private int _secFreqRefresh = 3; // how often we update the ui - i.e. calculate score in seconds
+    private int _secFreqRefresh = 2; // how often we update the ui - i.e. calculate score in seconds
 
     // undo button feature
     private int _undoDeleteRatio = 10;
@@ -41,6 +41,7 @@ public class Paintable : MonoBehaviour
     void Start()
     {
         //***Must run this line below when truly first time run the game***
+        // TODO: Create a reset to start of game button and call PlayerPrefs.DeleteAll() and the rest of the code below.
         //PlayerPrefs.DeleteAll();
 
 
@@ -61,14 +62,22 @@ public class Paintable : MonoBehaviour
         Array.Sort(labelTextures, delegate(Texture2D x, Texture2D y) {
             return Int16.Parse(x.name).CompareTo(Int16.Parse(y.name));
         });
+        
+        viewable.next(imgNumber); // updates label view as well
+    }
 
+    private void OnDestroy()
+    {
+        Debug.Log("clear player prefs on destroy");
+        PlayerPrefs.DeleteAll();
     }
 
     // Update is called once per frame
     void Update()
     {
-        
-        if (Input.GetMouseButton(0) && Input.mousePosition.y < 730 ) // putting down brush stokes
+
+        var notOnUIControls = sizeSlider.fillRect.position.y - 60 > Input.mousePosition.y;
+        if (Input.GetMouseButton(0) && notOnUIControls ) // putting down brush stokes
         {
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
@@ -83,9 +92,11 @@ public class Paintable : MonoBehaviour
 
         if (_isRunning == 1) StartCoroutine(coUpdateUI());
 
-        if (Input.GetKeyDown(KeyCode.UpArrow) && _brushSize < 1.0f) updateBrushSize(_brushSize + 0.1f); 
-        if (Input.GetKeyDown(KeyCode.DownArrow) && _brushSize > 0.1f) updateBrushSize(_brushSize - 0.1f);
-        
+        if (Input.GetKeyDown(KeyCode.UpArrow) && _brushSize < sizeSlider.maxValue) updateBrushSize(_brushSize + 0.1f); 
+        if (Input.GetKeyDown(KeyCode.DownArrow) && _brushSize > sizeSlider.minValue) updateBrushSize(_brushSize - 0.1f);
+        if (Input.GetKeyDown(KeyCode.RightArrow)){ goToNextImage(); }
+        if (Input.GetKeyDown(KeyCode.LeftArrow)){ undo(); }
+
     }
 
     public IEnumerator coUpdateUI()
@@ -103,10 +114,11 @@ public class Paintable : MonoBehaviour
         viewableTexture.ReadPixels(new Rect(0, 0, RTextureViewable.width, RTextureViewable.height), 0, 0);
 
         float similarityScore = overlapScore(createMaskTexture(), viewableTexture);
-        //float similarityScore = evaluateAccuracy(createMaskTexture(), viewableTexture);
+        //Debug.Log("evaulateAcc: " + evaluateAccuracy(createMaskTexture(), processLabelForDiceEval(viewableTexture)).ToString());
         
-        Debug.Log("score: " + similarityScore.ToString());
-        scoreText.text = "Score: " + similarityScore.ToString();
+        //Debug.Log("score: " + similarityScore.ToString());
+        int roundedScore = (int)Math.Round(similarityScore, 0);
+        scoreText.text = "Score " + roundedScore.ToString() + "%";
 
     }
 
@@ -159,7 +171,7 @@ public class Paintable : MonoBehaviour
         }
         Debug.Log("current imgNumber: " + imgNumber);
         imgNumber += 1;
-
+        PlayerPrefs.SetInt("imgNum", imgNumber);
         // Go To Next Image
         next();
 
@@ -169,13 +181,13 @@ public class Paintable : MonoBehaviour
     {
         var maskTexture = createMaskTexture();
         var pngData = maskTexture.EncodeToPNG();
+        
         File.WriteAllBytes(Application.dataPath + "/Resources/data/drawings/" + imgNumber + ".png", pngData);
     }
 
     public void newBatch()
     {
         //Go to cutscene
-        Debug.Log("go to cut scene");
         //DontDestroyOnLoad(imgNumber);
         SceneManager.LoadScene("Cutscene");
     }
@@ -212,7 +224,7 @@ public class Paintable : MonoBehaviour
         {
             // TODO: Will want to convert label texture into a transparent mask and use this comparision instead of checking for dark pixels
             //if (labelPixels[i].a == 0)
-            if (labelPixels[i].r > 0.5)
+            if (labelPixels[i].r > 0.05f)
             {
                 maxOverlap += 1;
             }
@@ -221,19 +233,41 @@ public class Paintable : MonoBehaviour
         for (int i = 0; i < drawnPixels.Length; i++)
         {
             // TODO: Will want to convert label texture into a transparent mask and use this comparision instead of checking for dark pixels
-            //if (drawnPixels[i].a == 0 && labelPixels[i].a == 0) overLapCount += 1; // plus 1 for each pixen drawn that is in label mask
+            //if (drawnPixels[i].a == 0 && labelPixels[i].a == 0) overLapCount += 1; // plus 1 for each pixel drawn that is in label mask
             //if (drawnPixels[i].a == 0 && labelPixels[i].a != 0) overLapCount -= 1; // minus 1 for each pixel drawn that is outside of label mask
             
-            if (drawnPixels[i].a == 0 && labelPixels[i].r > 0.5) overLapCount += 1; // plus 1 for each pixen drawn that is in label mask
-            if (drawnPixels[i].a == 0 && labelPixels[i].r < 0.5) overLapCount -= 1; // minus 1 for each pixel drawn that is outside of label mask
+            if (drawnPixels[i].r > 0.05f && labelPixels[i].r > 0.05f) overLapCount += 1; // plus 1 for each pixel drawn that is in label mask
+            if (drawnPixels[i].r > 0.05f && labelPixels[i].r < 0.05f) overLapCount -= 1; // minus 1 for each pixel drawn that is outside of label mask
         }
-
+        
         if (maxOverlap == 0) return 0;
         
         float score = ((float)overLapCount / (float)maxOverlap) * 100f;
         if (score < 0) score = 0;
         return score;
 
+    }
+
+    private Texture2D processLabelForDiceEval(Texture2D label)
+    {
+        Color[] labelPixels = label.GetPixels();
+        
+        for (int i = 0; i < labelPixels.Length; i++)
+        {
+            if (labelPixels[i].r > 0.05f)
+            {
+                labelPixels[i].a = 1;
+            }
+            else
+            {
+                labelPixels[i].a = 0;
+            }
+        }
+        
+        Texture2D output = new Texture2D(label.width, label.height);
+        output.SetPixels(labelPixels);
+
+        return output;
     }
     
     private float evaluateAccuracy(Texture2D userInput, Texture2D groundTruth)
@@ -264,30 +298,28 @@ public class Paintable : MonoBehaviour
         var drawingTexture = new Texture2D(RTexture1.width, RTexture1.height);
         drawingTexture.ReadPixels(new Rect(0, 0, RTexture1.width, RTexture1.height), 0, 0);
         
-        var drawingPixels = drawingTexture.GetPixels();
-        var maskOutputPixels = drawingPixels;
+        var drawingPixels = drawingTexture.GetPixels32();
+        Texture2D maskTexture = new Texture2D(drawingTexture.width, drawingTexture.height);
 
-        for (int i = 0; i < drawingPixels.Length; i++)
+        for (int i = 0; i < drawingTexture.width; i++)
         {
-            if (drawingPixels[i].r >= 0.95 && drawingPixels[i].g < 0.6 && drawingPixels[i].b < 0.6) // is red
+            for (int j = 0; j < drawingTexture.height; j++)
             {
-                maskOutputPixels[i].a = 1;
-                maskOutputPixels[i].r = 255;
-                maskOutputPixels[i].g = 255;
-                maskOutputPixels[i].b = 255;
-            }
-            else
-            {
-                maskOutputPixels[i].a = 1;
-                maskOutputPixels[i].r = 0;
-                maskOutputPixels[i].g = 0;
-                maskOutputPixels[i].b = 0;
+                if (drawingPixels[i+ j * drawingTexture.width].r >= 0.95 && drawingPixels[i+ j * drawingTexture.width].g < 0.6 && drawingPixels[i+ j * drawingTexture.width].b < 0.6) // is red - the label pixels
+                {
+                    Color c = new Color(255, 255, 255, 1);
+                    maskTexture.SetPixel(i, j, c);
+                }
+                else
+                {
+                    Color c = new Color(0, 0, 0, 1);
+                    maskTexture.SetPixel(i, j, c);
+                }
             }
         }
 
-        Texture2D maskTexture = new Texture2D(drawingTexture.width, drawingTexture.height);
-        maskTexture.SetPixels(maskOutputPixels);
-
+        
+        
         return maskTexture;
     }
 

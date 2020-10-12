@@ -41,6 +41,7 @@ public class Viewable : MonoBehaviour
     
     public void goToNextImage()
     {
+        
         StartCoroutine(coNext());
 
     }
@@ -52,14 +53,14 @@ public class Viewable : MonoBehaviour
         imgNumber += 1;
 
         // Go To Next Image
-        next();
+        next(imgNumber);
 
     }
 
-    public void next()
+    public void next(int imgNum)
     {
         // swap material texture
-        
+        imgNumber = imgNum;
         _renderer.material.mainTexture = allTextures[imgNumber - 1];
 
     }
