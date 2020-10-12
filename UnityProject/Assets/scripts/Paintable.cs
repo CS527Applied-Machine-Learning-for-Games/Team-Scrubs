@@ -271,14 +271,14 @@ public class Paintable : MonoBehaviour
         {
             if (drawingPixels[i].r >= 0.95 && drawingPixels[i].g < 0.6 && drawingPixels[i].b < 0.6) // is red
             {
-                maskOutputPixels[i].a = 0;
+                maskOutputPixels[i].a = 1;
                 maskOutputPixels[i].r = 255;
                 maskOutputPixels[i].g = 255;
                 maskOutputPixels[i].b = 255;
             }
             else
             {
-                maskOutputPixels[i].a = 0;
+                maskOutputPixels[i].a = 1;
                 maskOutputPixels[i].r = 0;
                 maskOutputPixels[i].g = 0;
                 maskOutputPixels[i].b = 0;
