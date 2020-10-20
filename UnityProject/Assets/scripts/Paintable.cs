@@ -66,11 +66,11 @@ public class Paintable : MonoBehaviour
         viewable.next(imgNumber); // updates label view as well
     }
 
-    private void OnDestroy()
+    /*private void OnDestroy()
     {
         Debug.Log("clear player prefs on destroy");
         PlayerPrefs.DeleteAll();
-    }
+    }*/
 
     // Update is called once per frame
     void Update()
