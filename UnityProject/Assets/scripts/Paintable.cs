@@ -40,12 +40,9 @@ public class Paintable : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //***Must run this line below when truly first time run the game***
-        // TODO: Create a reset to start of game button and call PlayerPrefs.DeleteAll() and the rest of the code below.
-        //PlayerPrefs.DeleteAll();
-
 
         imgNumber = PlayerPrefs.GetInt("imgNum", 1);
+        saveCurrentLocation();
 
         allTextures = Resources.LoadAll<Texture2D>(paintableResourcePath);
         
@@ -64,6 +61,16 @@ public class Paintable : MonoBehaviour
         });
         
         viewable.next(imgNumber); // updates label view as well
+    }
+    
+    private void saveCurrentLocation()
+    {
+        string path = "Assets/Resources/data/player_data.txt";
+        int currentImg = PlayerPrefs.GetInt("imgNum", 1);
+        using (StreamWriter writer = new StreamWriter(path))  
+        {  
+            writer.WriteLine(currentImg.ToString());
+        }
     }
 
     /*private void OnDestroy()
@@ -203,7 +210,8 @@ public class Paintable : MonoBehaviour
         {
             GameObject.Destroy(child.gameObject);
         }
-
+        
+        saveCurrentLocation();
     }
 
     private float overlapScore(Texture2D drawnTexture, Texture2D labelTexture)
