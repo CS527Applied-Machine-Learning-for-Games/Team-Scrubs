@@ -32,6 +32,12 @@ public class MainMenu : MonoBehaviour
         SceneManager.LoadScene("Cutscene");
     }
 
+    public void RestartGame()
+    {
+        PlayerPrefs.DeleteAll();
+        PlayGame();
+    }
+
     public void QuitGame()
     {
         Debug.Log("Quit!");
