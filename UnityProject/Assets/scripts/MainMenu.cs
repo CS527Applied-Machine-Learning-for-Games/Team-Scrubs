@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Hosting;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -36,6 +38,31 @@ public class MainMenu : MonoBehaviour
     {
         PlayerPrefs.DeleteAll();
         PlayGame();
+    }
+
+    public void ULdrawing()
+    {
+        string path = EditorUtility.OpenFolderPanel("Upload Drawings", "", "");
+        string[] files = Directory.GetFiles(path);
+
+        foreach(string file in files)
+        {
+            File.Copy(file, Application.dataPath + "/Resources/data/user_drawings/" + Path.GetFileName(file));
+        }
+
+    }
+
+    public void ULlabel()
+    {
+        string path = EditorUtility.OpenFolderPanel("Upload Labels", "", "");
+        string[] files = Directory.GetFiles(path);
+
+        foreach (string file in files)
+        {
+            File.Copy(file, Application.dataPath + "/Resources/data/user_labels/" + Path.GetFileName(file));
+        }
+
+
     }
 
     public void QuitGame()
