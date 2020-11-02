@@ -11,8 +11,6 @@ from kerassurgeon import Surgeon, identify
 from kerassurgeon.operations import delete_channels, delete_layer
 
 
-
-
 def unet(pretrained_weights = None,input_size = (256,256,1)):
     inputs = Input(input_size)
     conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(inputs)
@@ -165,7 +163,7 @@ def prune_model(model, perc, layer=None):
 
 if __name__ == "__main__":
     os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    
     from dataLoader import (
         pretrain_data,
         test_data,
@@ -178,16 +176,16 @@ if __name__ == "__main__":
     X, Y = pretrain_data()
     print("Retrieving test data...")
     test_X, test_Y = test_data()
-#     m = unet()
-#     print("Train model...")
-#     H = m.fit(X, Y, batch_size=10, epochs=1, validation_split=0.8)
-#     m.save("./prune_models/model.h5")
-#     print("Model saved to prune_models/model.h5")
-#     print("Evaluating pre-trained model...")
-#     results = m.evaluate(test_X, test_Y, batch_size=10)
-#     print("test loss, test acc:", results)
-    print("Loading model...")
-    m = load_model("./prune_models/model.h5")
+    m = unet()
+    print("Train model...")
+    H = m.fit(X, Y, batch_size=10, epochs=1, validation_split=0.8)
+    m.save("./prune_models/model.h5")
+    print("Model saved to prune_models/model.h5")
+    print("Evaluating pre-trained model...")
+    results = m.evaluate(test_X, test_Y, batch_size=10)
+    print("test loss, test acc:", results)
+    # print("Loading model...")
+    # m = load_model("./prune_models/model.h5")
     print("Start pruning...")
     mp = prune_model(m, 0.2)
     mp.summary()

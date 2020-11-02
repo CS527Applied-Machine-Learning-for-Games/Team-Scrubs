@@ -1,6 +1,6 @@
-import os, sys, time, PIL
+import os, sys, time, PIL, threading
 import numpy as np
-from model import unet
+from model_prune import unet, prune_model
 from dataLoader import (
     pretrain_data,
     test_data,
@@ -10,12 +10,36 @@ from dataLoader import (
     play_data_by_batch_x,
 )
 
+
 from keras.models import *
 from keras.layers import *
 from keras.optimizers import *
 from keras import backend as keras
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
+
+
+def evaluate_thread(m, m_id):
+    """
+    This thread takes a model, evaluates it, and saves the result to report directory.
+    ======
+    Parameter:
+    m - model
+    m_id - model index number starting from 1
+    """
+    print("===Evaluating Thread for model {} Start===".format(m_id))
+    print("Evaluating Thread: Loading testing dataset...")
+    test_X, test_Y = test_data()
+    print("Evaluating Thread: Evaluating model {}...".format(m_inm_iddex))
+    results = m.evaluate(test_X, test_Y, batch_size=10)
+    print("Evaluating Thread: test loss, test acc:", results)
+    if not os.path.exists("../UnityProject/Assets/Resources/data/reports"):
+        print("Evaluating Thread: Creating reports directory...")
+        os.makedirs("../UnityProject/Assets/Resources/data/reports")
+    with open("../UnityProject/Assets/Resources/data/reports/{}.txt".format(m_id), "w") as f:
+        f.write(str(results[1]))
+    print("Evaluating Thread: Resut saved to ../UnityProject/Assets/Resources/data/reports/{}.txt".format(m_id))
+    print("===Evaluating Thread for model {} End===".format(m_id))
 
 
 def save_prediction(imgs, start_index=1, end_index=801):
@@ -29,6 +53,15 @@ def save_prediction(imgs, start_index=1, end_index=801):
         PIL.Image.fromarray(np.uint8(np.squeeze(img * 255))).save(image_dir)
 
 
+def prediction_thread(m, m_id, X, start_index):
+    print("===Predicting Thread for model {} Start===".format(m_id))
+    print("Predicting game images...")
+    pred_Y = m.predict(X)
+    print("Saving predictions...")
+    save_prediction(pred_Y)
+    print("===Predicting Thread for model {} End===".format(m_id))
+
+
 def pre_train():
     m = unet()
     print("Retrieving pre-train data...")
@@ -37,25 +70,21 @@ def pre_train():
     print("Saving model...")
     m.save("./models/1.h5")
     print("Model saved to data/models/1.h5")
-    print("Evaluating pre-trained model...")
-    results = m.evaluate(test_X, test_Y, batch_size=10)
-    print("test loss, test acc:", results)
-    if not os.path.exists("../UnityProject/Assets/Resources/data/reports"):
-        print("Creating reports directory...")
-        os.makedirs("../UnityProject/Assets/Resources/data/reports")
-    with open("../UnityProject/Assets/Resources/data/reports/1.txt", "w") as f:
-        f.write(str(results[1]))
-    print("Resut saved to data/reports/1.txt")
+    evl_t = threading.Thread(target=evaluate_thread, args=(m, "1"), daemon=True)
+    evl_t.start()
     print("Load game images...")
     X, _ = play_data()
-    print("Predicting game images...")
-    pred_Y = m.predict(X)
-    print("Saving predictions...")
-    save_prediction(pred_Y)
+    pred_t = threading.Thread(target=,args=,daemon=)
+    pred_t.start()
+
+    # Wait for both evaluation and prediction to finish
+    evl_t.join()
+    pred_t.join()
+    return  m
 
 
 def train_model_by_batch():
-    BATCH_NUM = 0
+    
     # Check if pre-trained model exist
     path_to_watch = "../UnityProject/Assets/Resources/data/drawings/"
     before = dict(
@@ -101,12 +130,36 @@ def train_model_by_batch():
 
 if __name__ == "__main__":
     os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    if len(sys.argv) == 1:
+        prune = False
+    elif len(sys.argv) == 2:
+        if sys.argv[1] == "--prune":
+            prune = True
+        else:
+            print("Wrong argument. Currently only accept variable [--prune] .")
+            exit(0)
+    else:
+        print("Wrong number of argument")
+        exit(0)
+
+    # Check whether there exist previous model
     if not os.path.exists("./models/"):
         print("Creating model directory...")
         os.makedirs("./models/")
-    print("Preparing testing data...")
-    test_X, test_Y = test_data()
-    if not os.path.exists("./models/1.h5"):
-        print("Pre-training the model...")
+        BATCH_NUM = 0
         pre_train()
-    train_model_by_batch()
+    elif not os.path.exists("./models/1.h5"):
+        print("Pre-training the model...")
+        BATCH_NUM = 0
+        pre_train()
+    else:
+        try:
+            with open("../UnityProject/Assets/Resources/data/player_data.txt", "r") as f:
+                current_img = int(f.read().strip())
+                BATCH_NUM = (current_img-1)//10
+                print("Player currently played {} images, the BATCH_NUM is set to {}".format(current_img, BATCH_NUM))
+        except:
+            print("Error when Loading player_data.txt")
+
+    train_model_by_batch(prune)
