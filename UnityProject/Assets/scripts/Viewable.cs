@@ -10,6 +10,8 @@ public class Viewable : MonoBehaviour
     private Texture[] allTextures;
     
     private Renderer _renderer;
+
+    public Texture showHintTexture;
     
 
     // Start is called before the first frame update
@@ -27,7 +29,7 @@ public class Viewable : MonoBehaviour
 
         _renderer = GetComponent<Renderer>();
 
-        _renderer.material.mainTexture = allTextures[imgNumber - 1];
+        _renderer.material.mainTexture = showHintTexture;
         
         
     }
@@ -61,8 +63,15 @@ public class Viewable : MonoBehaviour
     {
         // swap material texture
         imgNumber = imgNum;
-        _renderer.material.mainTexture = allTextures[imgNumber - 1];
+        _renderer.material.mainTexture = showHintTexture;
+        //_renderer.material.mainTexture = allTextures[imgNumber - 1];
 
+
+    }
+
+    public void showHint()
+    {
+        _renderer.material.mainTexture = allTextures[imgNumber - 1];
     }
     
 
