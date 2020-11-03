@@ -5,20 +5,24 @@ def _load_properties(filename):
             parts = line.strip().split("=")
             if len(parts) < 2:
                 continue
-            properties[parts[0].strip()] = parts[1].strip()
+            properties[parts[0].strip()] = int(parts[1].strip())
     return properties
 
 
 def _write_properties(filename, param, value):
     # Read file and find the correct value to replace
     new_properties = ""
+    found = False
     with open(filename, "r") as f:
         for line in f:
             parts = line.strip().split("=")
             if len(parts) == 2 and parts[0]==param:
-                new_properties += param+"="+value+"\n" # Note the type of value is str
+                new_properties += param + "=" + str(value) + "\n" # Note the type of value is str
+                found = True
             else:
                 new_properties += line
+    if not found:
+        new_properties += "\n" + param + "=" + str(value)
     # Overwrite properties file with new properties
     with open(filename, "w") as f:
         f.write(new_properties)
