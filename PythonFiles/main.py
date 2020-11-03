@@ -28,21 +28,19 @@ def evaluate_thread(m, m_id, num_of_data):
     print("Evaluating Thread: test loss, test acc:", results)
     if not os.path.exists(DATA_DIR+"reports"):
         print("Evaluating Thread: Creating reports directory...")
-        os.makedirs("../UnityProject/Assets/Resources/data/reports")
-    with open("../UnityProject/Assets/Resources/data/reports/{}.txt".format(m_id), "w") as f:
+        os.makedirs(DATA_DIR+"reports")
+    with open(DATA_DIR+"reports/{}.txt".format(m_id), "w") as f:
         f.write(str(results[1]))
-    print("Evaluating Thread: Resut saved to ../UnityProject/Assets/Resources/data/reports/{}.txt".format(m_id))
+    print("Evaluating Thread: Resut saved to {}reports/{}.txt".format(DATA_DIR, m_id))
     print("===Evaluating Thread for model {} End===".format(m_id))
 
 
 def save_prediction(imgs, start_index, end_index):
-    if not os.path.exists("../UnityProject/Assets/Resources/data/prediction"):
+    if not os.path.exists(DATA_DIR+"predictions"):
         print("Creating prediction directory...")
-        os.makedirs("../UnityProject/Assets/Resources/data/prediction")
+        os.makedirs(DATA_DIR+"predictions")
     for i, img in zip(range(start_index, end_index + 1), imgs):
-        image_dir = (
-            "../UnityProject/Assets/Resources/data/prediction/" + str(i) + ".png"
-        )
+        image_dir = DATA_DIR + "predictions/{}.png".format(i)
         PIL.Image.fromarray(np.uint8(np.squeeze(img * 255))).save(image_dir)
 
 
@@ -98,6 +96,9 @@ def train_model_by_batch(m, BATCH_NUM):
     The predictions will be saved to prediction
     """
     X, Y = play_data_by_batch((BATCH_NUM-1) * config["play_batch_size"] + 1, BATCH_NUM * config["play_batch_size"])
+    for y in Y:
+        print(y.shape)
+        break
     Y = np.array([y[:, :, :, 0] for y in Y])
     H = m.fit(
         X, 
@@ -134,7 +135,7 @@ def main():
         with open(DATA_DIR + "player_data.txt", "r") as f:
             state["current_img"] = int(f.read().strip())
             write_state("current_img", state["current_img"])
-            print("Player currently played {} images, the BATCH_NUM is set to {}".format(current_img, BATCH_NUM))
+            print("Player currently played {} images, the BATCH_NUM is set to {}".format(state["current_img"], state["current_model"]))
         # TODO: Change this to load the latest model
         m = load_model("./models/{}.h5".format(state["current_model"]))
     else:
@@ -151,13 +152,15 @@ def main():
     # Every 10 seconds, it checks the drawing folder where the player's labeling will be saved.
     # Whenever there are greater of equal to `config["play_batch_size"]` new images in the drawing folder,
     # the model trains on a batch of `config["play_batch_size"]` images.
+    batch_size = state["current_model"] * config["play_batch_size"]
     while True:
-        max_index = max([int(f.split(".")[0]) for f in os.listdir(DATA_DIR + "drawings/") if f.split(".")[1] == "png"])
-        if max_index >= state["current_model"] * config["play_batch_size"]:
+        index_ls = [int(x[0]) for x in [f.split(".") for f in os.listdir(DATA_DIR + "drawings/")] if len(x) == 2 and x[1] == "png"]
+        print("Currently detect ", len(index_ls), "drawing(s).")
+        if index_ls and max(index_ls) >= batch_size:
             m, state["current_model"] = train_model_by_batch(m, state["current_model"])
             write_state("current_model", state["current_model"])
         else:
-            print("currently detect ", len(before), ", waiting for more drawing ...")
+            print("Waiting for more drawing ...")
             time.sleep(10)
 
 
