@@ -74,7 +74,7 @@ def pre_train():
         Y,
         batch_size=config["pretrain_batch_size"],
         epochs=config["pretrain_epochs"],
-        validation_split=config["pretrain_split"]/100
+        validation_split=config["pretrain_split_percentage"]/100
     )
     print("Saving model...")
     m.save("./models/1.h5")
@@ -99,19 +99,19 @@ def train_model_by_batch(m, BATCH_NUM):
     """
     X, Y = play_data_by_batch((BATCH_NUM-1) * config["play_batch_size"] + 1, BATCH_NUM * config["play_batch_size"])
     Y = np.array([y[:, :, :, 0] for y in Y])
-    m.fit(
+    H = m.fit(
         X, 
         Y, 
         batch_size=config["play_batch_size"], 
         epochs=config["play_epochs"]
     )
-    BATCH_NUM += 1
-
-    if config["prune"] and BATCH_NUM :
-        m = prune_model(m, perc)
+    if config["prune"] and BATCH_NUM % config["number_of_batch_to_prune"]:
+        BATCH_NUM += 1
+        m = prune_model(m, config["prune_percentage"]/100)
         mp.save("./models/{}.h5".format(BATCH_NUM))
         print("Pruned model saved to models/{}.h5".format(BATCH_NUM))
     else:
+        BATCH_NUM += 1
         m.save("./models/{}.h5".format(BATCH_NUM))
         print("Model saved to models/{}.h5".format(BATCH_NUM))
         
