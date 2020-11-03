@@ -10,10 +10,6 @@ public class MainMenu : MonoBehaviour
 {
     void Start()
     {
-        //***Must run this line below when truly first time run the game***
-        // TODO: Create a reset to start of game button and call PlayerPrefs.DeleteAll() and the rest of the code below.
-        PlayerPrefs.DeleteAll();
-        
         saveCurrentLocation();
     }
 
