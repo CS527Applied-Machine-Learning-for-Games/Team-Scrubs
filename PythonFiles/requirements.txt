@@ -1,0 +1,55 @@
+absl-py @ file:///opt/concourse/worker/volumes/live/5183a274-c173-4ec1-5db6-bf74e5e0e067/volume/absl-py_1600297518967/work
+astor==0.8.1
+astunparse==1.6.3
+attrs==20.2.0
+cachetools==4.1.1
+certifi==2020.6.20
+chardet==3.0.4
+gast==0.3.3
+google-auth==1.22.1
+google-auth-oauthlib==0.4.1
+google-pasta==0.2.0
+grpcio @ file:///opt/concourse/worker/volumes/live/b5e6cc9f-d048-411b-5e0a-34cf579ea9aa/volume/grpcio_1597424489035/work
+h5py @ file:///opt/concourse/worker/volumes/live/98bee3fd-2687-4017-5421-d742d1f18c35/volume/h5py_1593454156895/work
+idna==2.10
+importlib-metadata==1.7.0
+iniconfig==1.1.1
+Keras==2.4.3
+Keras-Applications @ file:///tmp/build/80754af9/keras-applications_1594366238411/work
+Keras-Preprocessing==1.1.0
+kerassurgeon==0.2.0
+Markdown @ file:///opt/concourse/worker/volumes/live/4dd1d028-bdcb-4acc-732b-a399c086db80/volume/markdown_1602689110591/work
+mkl-fft==1.2.0
+mkl-random==1.1.1
+mkl-service==2.3.0
+numpy @ file:///opt/concourse/worker/volumes/live/40d975a3-7e82-44c8-53df-feccdbce8b96/volume/numpy_and_numpy_base_1596233859108/work
+oauthlib==3.1.0
+opt-einsum==3.1.0
+packaging==20.4
+pandas==1.1.3
+Pillow==7.2.0
+pluggy==0.13.1
+protobuf==3.13.0
+py==1.9.0
+pyasn1==0.4.8
+pyasn1-modules==0.2.8
+pyparsing==2.4.7
+pytest==6.1.1
+python-dateutil==2.8.1
+pytz==2020.1
+PyYAML==5.3.1
+requests==2.24.0
+requests-oauthlib==1.3.0
+rsa==4.6
+scipy==1.4.1
+six==1.15.0
+tensorboard==2.2.2
+tensorboard-plugin-wit==1.7.0
+tensorflow==2.2.0
+tensorflow-estimator==2.2.0
+termcolor==1.1.0
+toml==0.10.1
+urllib3==1.25.11
+Werkzeug==1.0.1
+wrapt==1.12.1
+zipp @ file:///tmp/build/80754af9/zipp_1602002379921/work
