@@ -23,7 +23,7 @@ def evaluate_thread(m, m_id, num_of_data):
     print("===Evaluating Thread for model {} Start===".format(m_id))
     print("Evaluating Thread: Loading testing dataset...")
     test_X, test_Y = test_data(num_of_data)
-    print("Evaluating Thread: Evaluating model {}...".format(m_inm_iddex))
+    print("Evaluating Thread: Evaluating model {}...".format(m_id))
     results = m.evaluate(test_X, test_Y, batch_size=10)
     print("Evaluating Thread: test loss, test acc:", results)
     if not os.path.exists(DATA_DIR+"reports"):
