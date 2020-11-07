@@ -2,11 +2,13 @@ For the first time, setting up the environment with the requirements.txt in Pyth
 
 Install the lastest version of Anaconda following the instruction on the official website.
 
-`cd PythonFiles`
-`conda create -n csci527 python=3.7.4`
-`conda activate csci527`
-`conda install pip`
-`pip install -r requirements.txt`
+```
+cd PythonFiles
+conda create -n csci527 python=3.7.4
+conda activate csci527
+conda install pip
+pip install -r requirements.txt
+```
 
 To run the back end, `python main.py`
 
@@ -14,12 +16,14 @@ The first time you run main.py, it will take a while to pretrained the model. Af
 
 If you have ran this program before, and
 1. you want to restart the game, or
-2. meet an error continue previous game. Go throught the following reset process:
+2. meet an error continue previous game.
 
-    Make sure you remove all generated files in
+Go throught the following reset process:
+
+1. Make sure you remove all generated files in
     1. `PythonFiles/model/*.h5`,
     2. `UnityProject/Assets/Resources/data/drawings`,
     3. `UnityProject/Assets/Resources/data/reports`,
     4. `UnityProject/Assets/Resources/data/predictions`
 
-    Also, change `pretrain_finished` and `current_model` parameters to 0 in `state.properties` file.
+2. Also, change `pretrain_finished` and `current_model` parameters to 0 in `state.properties` file.
