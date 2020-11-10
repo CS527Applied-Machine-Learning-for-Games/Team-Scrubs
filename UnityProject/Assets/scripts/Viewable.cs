@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using System;
+using System.IO;
 
 public class Viewable : MonoBehaviour
 {
@@ -17,16 +18,43 @@ public class Viewable : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        string imageDirectory = Application.streamingAssetsPath + resourcePath;
 
-        allTextures = Resources.LoadAll<Texture>(resourcePath);
-
+        /*
+        allTextures = Resources.LoadAll<Texture>(Application.streamingAssetsPath + "/Resources/" + resourcePath);
         Array.Sort<Texture>(allTextures,
-            delegate(Texture x, Texture y) { return String.Compare(x.name,y.name, StringComparison.Ordinal); });
-        
-        Array.Sort(allTextures, delegate(Texture x, Texture y) {
+            delegate (Texture x, Texture y) { return String.Compare(x.name, y.name, StringComparison.Ordinal); });
+
+        Array.Sort(allTextures, delegate (Texture x, Texture y) {
             return Int16.Parse(x.name).CompareTo(Int16.Parse(y.name));
         });
+        */
 
+        string[] files = Directory.GetFiles(imageDirectory, "*png");
+
+        allTextures = new Texture2D[files.Length];
+
+        Array.Sort<string>(files,
+            delegate (string x, string y) { return String.Compare(x, y, StringComparison.Ordinal); });
+
+        //Does this need to work?
+
+        /*Array.Sort(files, delegate (string x, string y) {
+            return Int16.Parse(x).CompareTo(Int16.Parse(y));
+        });*/
+
+        for(int i = 0; i<files.Length; i++)
+        {
+            Texture2D tex = null;
+            byte[] imageData;
+            imageData = File.ReadAllBytes(files[i]);
+
+            tex = new Texture2D(1, 1);
+            tex.LoadImage(imageData);
+
+            allTextures[i] = tex;
+        }
+ 
         _renderer = GetComponent<Renderer>();
 
         _renderer.material.mainTexture = showHintTexture;

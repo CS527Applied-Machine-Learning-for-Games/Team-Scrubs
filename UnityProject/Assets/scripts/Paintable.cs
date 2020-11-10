@@ -44,28 +44,81 @@ public class Paintable : MonoBehaviour
         imgNumber = PlayerPrefs.GetInt("imgNum", 1);
         saveCurrentLocation();
 
-        allTextures = Resources.LoadAll<Texture2D>(paintableResourcePath);
+        /*allTextures = Resources.LoadAll<Texture2D>(Application.streamingAssetsPath + paintableResourcePath);
         
         Array.Sort(allTextures, delegate(Texture2D x, Texture2D y) {
             return Int16.Parse(x.name).CompareTo(Int16.Parse(y.name));
-        });
+        });*/
+        string imageDirectory = Application.streamingAssetsPath + paintableResourcePath;
+
+        string[] imageFiles = Directory.GetFiles(imageDirectory, "*png");
+
+        allTextures = new Texture2D[imageFiles.Length];
+
+        Array.Sort<string>(imageFiles,
+            delegate (string x, string y) { return String.Compare(x, y, StringComparison.Ordinal); });
+
+        //Does this need to work?
+
+        /*Array.Sort(files, delegate (string x, string y) {
+            return Int16.Parse(x).CompareTo(Int16.Parse(y));
+        });*/
+
+        for (int i = 0; i < imageFiles.Length; i++)
+        {
+            Texture2D tex = null;
+            byte[] imageData;
+            imageData = File.ReadAllBytes(imageFiles[i]);
+
+            tex = new Texture2D(1, 1);
+            tex.LoadImage(imageData);
+
+            allTextures[i] = tex;
+        }
 
         _renderer = GetComponent<Renderer>();
 
         _renderer.material.mainTexture = allTextures[imgNumber - 1];
 
-        labelTextures = Resources.LoadAll<Texture2D>(viewableResourcePath);
+        /*labelTextures = Resources.LoadAll<Texture2D>(Application.streamingAssetsPath + "/Resources/" + viewableResourcePath);
         
         Array.Sort(labelTextures, delegate(Texture2D x, Texture2D y) {
             return Int16.Parse(x.name).CompareTo(Int16.Parse(y.name));
-        });
-        
+        });*/
+
+        string labelDirectory = Application.streamingAssetsPath + viewableResourcePath;
+
+        string[] labelFiles = Directory.GetFiles(labelDirectory, "*png");
+
+        labelTextures = new Texture2D[labelFiles.Length];
+
+        Array.Sort<string>(labelFiles,
+            delegate (string x, string y) { return String.Compare(x, y, StringComparison.Ordinal); });
+
+        //Does this need to work?
+
+        /*Array.Sort(labelFiles, delegate (string x, string y) {
+            return Int16.Parse(x).CompareTo(Int16.Parse(y));
+        });*/
+
+        for (int i = 0; i < labelFiles.Length; i++)
+        {
+            Texture2D tex = null;
+            byte[] imageData;
+            imageData = File.ReadAllBytes(labelFiles[i]);
+
+            tex = new Texture2D(1, 1);
+            tex.LoadImage(imageData);
+
+            labelTextures[i] = tex;
+        }
+
         viewable.next(imgNumber); // updates label view as well
     }
     
     private void saveCurrentLocation()
     {
-        string path = "Assets/Resources/data/player_data.txt";
+        string path = Application.streamingAssetsPath + "/data/player_data.txt";
         int currentImg = PlayerPrefs.GetInt("imgNum", 1);
         using (StreamWriter writer = new StreamWriter(path))  
         {  
@@ -189,7 +242,7 @@ public class Paintable : MonoBehaviour
         var maskTexture = createMaskTexture();
         var pngData = maskTexture.EncodeToPNG();
         
-        File.WriteAllBytes(Application.dataPath + "/Resources/data/drawings/" + imgNumber + ".png", pngData);
+        File.WriteAllBytes(Application.streamingAssetsPath + "/data/drawings/" + imgNumber + ".png", pngData);
     }
 
     public void newBatch()

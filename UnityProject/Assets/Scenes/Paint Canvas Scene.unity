@@ -1454,7 +1454,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   imgNumber: 1
-  resourcePath: data/labels
+  resourcePath: /data/labels
   showHintTexture: {fileID: 2800000, guid: 712a8dcddfc7c4fdc9d764759bf7d2d8, type: 3}
 --- !u!64 &1216154632
 MeshCollider:
@@ -1899,8 +1899,8 @@ MonoBehaviour:
   scoreText: {fileID: 416561709}
   viewable: {fileID: 1216154631}
   imgNumber: 1
-  paintableResourcePath: data/images
-  viewableResourcePath: data/labels
+  paintableResourcePath: /data/images
+  viewableResourcePath: /data/labels
 --- !u!64 &1798813941
 MeshCollider:
   m_ObjectHideFlags: 0
