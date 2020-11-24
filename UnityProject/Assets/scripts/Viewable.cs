@@ -9,6 +9,7 @@ public class Viewable : MonoBehaviour
     public string resourcePath;
 
     private Texture[] allTextures;
+    private Texture[] predictedTextures;
     
     private Renderer _renderer;
 
@@ -18,6 +19,9 @@ public class Viewable : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        _renderer = GetComponent<Renderer>();
+        imgNumber = PlayerPrefs.GetInt("imgNum", 1);
+        
         string imageDirectory = Application.streamingAssetsPath + resourcePath;
 
         /*
@@ -43,7 +47,7 @@ public class Viewable : MonoBehaviour
             return Int16.Parse(x).CompareTo(Int16.Parse(y));
         });*/
 
-        for(int i = 0; i<files.Length; i++)
+        for(int i = 0; i<Math.Min(files.Length, 20); i++) // get the first 20 images
         {
             Texture2D tex = null;
             byte[] imageData;
@@ -54,12 +58,11 @@ public class Viewable : MonoBehaviour
 
             allTextures[i] = tex;
         }
- 
-        _renderer = GetComponent<Renderer>();
-
+        
+        updatePredictedTextures();
+        
         _renderer.material.mainTexture = showHintTexture;
-        
-        
+
     }
 
     // Update is called once per frame
@@ -93,13 +96,35 @@ public class Viewable : MonoBehaviour
         imgNumber = imgNum;
         _renderer.material.mainTexture = showHintTexture;
         //_renderer.material.mainTexture = allTextures[imgNumber - 1];
-
-
+        
+        updatePredictedTextures();
     }
 
     public void showHint()
     {
         _renderer.material.mainTexture = allTextures[imgNumber - 1];
+    }
+
+    private void updatePredictedTextures()
+    {
+        string predictedDirectory = Application.streamingAssetsPath + "/data/predictions";
+        string[] predictedFiles = Directory.GetFiles(predictedDirectory, "*png");
+
+        Array.Sort<string>(predictedFiles,
+            delegate (string x, string y) { return String.Compare(x, y, StringComparison.Ordinal); });
+
+        
+        for(int i = 20; i<20+predictedFiles.Length; i++) // get predicted image 20 - most current
+        {
+            Texture2D tex = null;
+            byte[] imageData;
+            imageData = File.ReadAllBytes(predictedFiles[i-20]);
+
+            tex = new Texture2D(1, 1);
+            tex.LoadImage(imageData);
+
+            allTextures[i] = tex;
+        }
     }
     
 
