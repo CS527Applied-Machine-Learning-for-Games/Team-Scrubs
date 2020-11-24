@@ -1,7 +1,7 @@
 import os, PIL
 import numpy as np
 
-image_root_dir = "../UnityProject/Assets/Resources/data/"
+image_root_dir = "../UnityProject/Assets/StreamingAssets/data/"
 
 train_imgs_sub_dir = os.path.join(image_root_dir, "pretrain_imgs")
 train_labels_sub_dir = os.path.join(image_root_dir, "pretrain_labels")
@@ -15,7 +15,7 @@ play_drawings_sub_dir = os.path.join(image_root_dir, "drawings")
 def _get_data(img_root, label_root, start_index, end_index):
     X = []
     Y = []
-    for i in range(start_index, end_index + 1):
+    for i in range(int(start_index), int(end_index) + 1):
         img_dir = os.path.join(img_root, str(i) + ".png")
         label_dir = os.path.join(label_root, str(i) + ".png")
         img = np.asarray(

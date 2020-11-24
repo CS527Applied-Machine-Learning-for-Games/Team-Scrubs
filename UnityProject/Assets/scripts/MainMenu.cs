@@ -15,7 +15,7 @@ public class MainMenu : MonoBehaviour
 
     private void saveCurrentLocation()
     {
-        string path = Application.persistentDataPath + "/data/player_data.txt";
+        string path = Application.streamingAssetsPath + "/data/player_data.txt";
         int currentImg = PlayerPrefs.GetInt("imgNum", 1);
         using (StreamWriter writer = new StreamWriter(path))  
         {  

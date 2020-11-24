@@ -95,7 +95,7 @@ def train_model_by_batch(m, BATCH_NUM):
     The evaluation result of each model will be save to results folder.
     The predictions will be saved to prediction
     """
-    X, Y = play_data_by_batch((BATCH_NUM-1) * config["play_batch_size"] + 1, BATCH_NUM * config["play_batch_size"])
+    X, Y = play_data_by_batch((int(BATCH_NUM)-1) * int(config["play_batch_size"]) + 1, int(BATCH_NUM) * int(config["play_batch_size"]))
     for y in Y:
         print(y.shape)
         break
@@ -106,13 +106,13 @@ def train_model_by_batch(m, BATCH_NUM):
         batch_size=config["play_batch_size"], 
         epochs=config["play_epochs"]
     )
-    if config["prune"] and BATCH_NUM % config["number_of_batch_to_prune"]:
-        BATCH_NUM += 1
-        m = prune_model(m, config["prune_percentage"]/100)
+    if int(config["prune"]) and int(BATCH_NUM) % int(config["number_of_batch_to_prune"]):
+        BATCH_NUM = int(BATCH_NUM) + 1
+        mp = prune_model(m, config["prune_percentage"]/100)
         mp.save("./models/{}.h5".format(BATCH_NUM))
         print("Pruned model saved to models/{}.h5".format(BATCH_NUM))
     else:
-        BATCH_NUM += 1
+        BATCH_NUM = int(BATCH_NUM) + 1
         m.save("./models/{}.h5".format(BATCH_NUM))
         print("Model saved to models/{}.h5".format(BATCH_NUM))
         
@@ -137,7 +137,7 @@ def main():
             write_state("current_img", state["current_img"])
             print("Player currently played {} images, the BATCH_NUM is set to {}".format(state["current_img"], state["current_model"]))
         # TODO: Change this to load the latest model
-        m = load_model("./models/{}.h5".format(state["current_model"]))
+        m = load_model('./models/{}.h5'.format(state["current_model"]))
     else:
         if config["has_pretrain_data"]: # Pretrain model
             print("Pre-training the model...")
@@ -152,11 +152,15 @@ def main():
     # Every 10 seconds, it checks the drawing folder where the player's labeling will be saved.
     # Whenever there are greater of equal to `config["play_batch_size"]` new images in the drawing folder,
     # the model trains on a batch of `config["play_batch_size"]` images.
-    batch_size = state["current_model"] * config["play_batch_size"]
+    batch_size = int(state["current_model"]) * int(config["play_batch_size"])
     while True:
         index_ls = [int(x[0]) for x in [f.split(".") for f in os.listdir(DATA_DIR + "drawings/")] if len(x) == 2 and x[1] == "png"]
         print("Currently detect ", len(index_ls), "drawing(s).")
-        if index_ls and max(index_ls) >= batch_size:
+        if index_ls and (  max(index_ls) >= ( batch_size * int(state["current_model"]) )  ):
+            print("Threshold:")
+            print(batch_size * int(state["current_model"]))
+            print("Max of index_list:")
+            print(max(index_ls))
             m, state["current_model"] = train_model_by_batch(m, state["current_model"])
             write_state("current_model", state["current_model"])
         else:
@@ -167,7 +171,7 @@ def main():
 if __name__ == "__main__":
     os.environ["KMP_DUPLICATE_LIB_OK"] = "True" # Tensorflow related issue
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" # Pruning prints too many message without this
-    DATA_DIR = "../UnityProject/Assets/Resources/data/"
+    DATA_DIR = "../UnityProject/Assets/StreamingAssets/data/"
     config = load_config()
     state = load_state()
     main()
